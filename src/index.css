@@ -1,0 +1,148 @@
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix Leaflet default marker icon paths */
+.leaflet-default-icon-path {
+ background-image: url(https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png);
+}
+
+/* Custom marker styles */
+.custom-marker {
+ background: transparent;
+ border: none;
+}
+
+.marker-pin {
+ width: 32px;
+ height: 32px;
+ border-radius: 50% 50% 50% 0;
+ background: #10b981;
+ border: 3px solid white;
+ box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+ transform: rotate(-45deg);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+}
+
+.marker-pin.goal {
+ background: #ef4444;
+}
+
+.marker-pin span {
+ transform: rotate(45deg);
+ color: white;
+ font-weight: bold;
+ font-size: 14px;
+}
+
+.obstacle-marker {
+ width: 28px;
+ height: 28px;
+ background: #dc2626;
+ border: 2px solid #fef2f2;
+ transform: rotate(45deg);
+ box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* Car marker animation */
+.car-marker {
+ background: transparent;
+ border: none;
+}
+
+.car-body {
+ width: 40px;
+ height: 40px;
+ background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
+ border: 2.5px solid white;
+ border-radius: 10px 10px 6px 6px;
+ box-shadow: 0 4px 12px rgba(34, 211, 238, 0.5),
+ 0 0 0 4px rgba(34, 211, 238, 0.15);
+ position: relative;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ transition: transform 0.1s linear;
+}
+
+.car-body::before {
+ content: '';
+ position: absolute;
+ top: -6px;
+ left: 50%;
+ transform: translateX(-50%);
+ width: 20px;
+ height: 8px;
+ background: rgba(255, 255, 255, 0.4);
+ border-radius: 4px 4px 0 0;
+}
+
+.car-body::after {
+ content: '🚗';
+ font-size: 18px;
+ z-index: 1;
+}
+
+/* Pulse halo around car */
+.car-halo {
+ position: absolute;
+ top: 50%;
+ left: 50%;
+ width: 60px;
+ height: 60px;
+ transform: translate(-50%, -50%);
+ border-radius: 50%;
+ background: rgba(34, 211, 238, 0.3);
+ animation: pulse-halo 1.5s ease-out infinite;
+ pointer-events: none;
+}
+
+@keyframes pulse-halo {
+ 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+ 100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+/* Path trail effect */
+.path-glow {
+ filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.6))
+ drop-shadow(0 0 12px rgba(34, 211, 238, 0.4));
+}
+
+html, body, #root {
+ height: 100%;
+ margin: 0;
+ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+ background: #0f172a;
+ color: #fff;
+}
+
+/* Custom Leaflet marker style */
+.custom-marker {
+ background: transparent;
+ border: none;
+}
+
+.leaflet-container {
+ background: #334155;
+ font-family: inherit;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+ width: 6px;
+ height: 6px;
+}
+::-webkit-scrollbar-track {
+ background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+ background: #475569;
+ border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+ background: #64748b;
+}
