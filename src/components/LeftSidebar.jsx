@@ -57,7 +57,7 @@ function Toggle({ label, value, onChange }) {
  )
 }
 
-function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVariant, onRun, running, selectMode, setSelectMode, start, goal, readyToRun, onReset }) {
+function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVariant, onRun, onCompare, compareMode, running, selectMode, setSelectMode, start, goal, readyToRun, onReset, dynamicObstacles }) {
  const hasStart = !!start
  const hasGoal = !!goal
 
@@ -98,9 +98,13 @@ function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVar
  <Hand size={14} className="mt-0.5 shrink-0" />
  <div>
  <p className="font-semibold mb-0.5">
- {selectMode === 'start' ? 'Bước 1: Chọn điểm bắt đầu' : 'Bước 2: Chọn điểm kết thúc'}
+ {selectMode === 'start' && 'Bước 1: Chọn điểm bắt đầu'}
+ {selectMode === 'goal' && 'Bước 2: Chọn điểm kết thúc'}
+ {selectMode === 'obstacle' && 'Vẽ chướng ngại vật'}
  </p>
- <p className="text-emerald-400/80">Click lên bản đồ. ESC để hủy.</p>
+ <p className="text-emerald-400/80">
+ {selectMode === 'obstacle' ? 'Click các nút trên đồ thị để bật/tắt vật cản. ESC để hủy.' : 'Click lên bản đồ. ESC để hủy.'}
+ </p>
  </div>
  </div>
  )}
@@ -121,6 +125,14 @@ function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVar
  completed={hasGoal}
  onClick={() => setSelectMode(hasStart ? 'goal' : 'start')}
  badge={selectMode === 'goal' ? 'CLICK MAP' : null}
+ />
+ <ControlBtn
+ icon={<XCircle size={16} />}
+ label="Select Obstacles"
+ active={selectMode === 'obstacle'}
+ completed={dynamicObstacles && dynamicObstacles.size > 0}
+ onClick={() => setSelectMode('obstacle')}
+ badge={selectMode === 'obstacle' ? 'CLICK NODES' : null}
  />
  <ControlBtn
  icon={<RotateCcw size={16} />}
@@ -187,10 +199,20 @@ function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVar
  <Play size={16} fill="currentColor" />
  {running ? 'Running...' : readyToRun ? 'Run Algorithm' : 'Select Start & Goal First'}
  </button>
- <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-transparent border border-slate-600 text-slate-300 hover:bg-slate-700 text-sm transition">
- <GitCompare size={16} />
- Compare Algorithms
- </button>
+    <button
+      onClick={onCompare}
+      disabled={!readyToRun || running}
+      className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm transition border ${
+        readyToRun && !running
+          ? compareMode && start && goal
+            ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+            : 'bg-transparent border-slate-600 text-slate-300 hover:bg-slate-700'
+          : 'border-slate-800 text-slate-600 cursor-not-allowed'
+      }`}
+    >
+      <GitCompare size={16} />
+      {running && compareMode ? 'Comparing...' : 'Compare Algorithms'}
+    </button>
  </div>
  </aside>
  )

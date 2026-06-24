@@ -1,4 +1,4 @@
-import { Grid3x3, Box, Eye, MapPin, Flag, Route, EyeOff, Ban, Map as MapIcon } from 'lucide-react'
+import { Network, Box, Eye, MapPin, Flag, Route, EyeOff, Ban, Map as MapIcon } from 'lucide-react'
 
 function Legend({ color, label, icon }) {
  return (
@@ -33,8 +33,8 @@ function BottomBar({ view, setView }) {
  view === 'grid' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
  }`}
  >
- <Grid3x3 size={12} />
- Grid View
+ <Network size={12} />
+ Graph View
  </button>
  <button
  onClick={() => setView('3d')}

@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { Polyline } from 'react-leaflet'
+import { Polyline, Marker } from 'react-leaflet'
+import L from 'leaflet'
 import { getRouteWithFallback } from '../utils/routing'
+
+const carIcon = L.divIcon({
+  className: 'custom-car-marker-div-3d',
+  html: `<div class="animate-bounce" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background-color: #ef4444; border: 2px solid white; border-radius: 50%; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.5); font-size: 16px;">🚗</div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
+})
 
 /**
  * Component vẽ route thật theo đường phố
@@ -89,54 +97,59 @@ export default function RealRoute({ start, goal, isAnimating, onComplete, onErro
  }
  }, [routePoints, isAnimating, onComplete])
 
- if (drawnPoints.length < 2) return null
+  if (drawnPoints.length < 2) return null
 
- return (
- <>
- {/* Outer glow - đỏ nhạt giống Google Maps */}
- <Polyline
- positions={drawnPoints}
- pathOptions={{
- color: '#ef4444',
- weight: 16,
- opacity: 0.25,
- lineCap: 'round',
- lineJoin: 'round'
- }}
- />
- {/* Mid glow */}
- <Polyline
- positions={drawnPoints}
- pathOptions={{
- color: '#f87171',
- weight: 10,
- opacity: 0.5,
- lineCap: 'round',
- lineJoin: 'round'
- }}
- />
- {/* Main path - đỏ tươi */}
- <Polyline
- positions={drawnPoints}
- pathOptions={{
- color: '#dc2626',
- weight: 6,
- opacity: 1,
- lineCap: 'round',
- lineJoin: 'round'
- }}
- />
- {/* Inner highlight - sáng trắng */}
- <Polyline
- positions={drawnPoints}
- pathOptions={{
- color: '#fef2f2',
- weight: 2,
- opacity: 0.8,
- lineCap: 'round',
- lineJoin: 'round'
- }}
- />
- </>
- )
+  return (
+    <>
+      {/* Outer glow - đỏ nhạt giống Google Maps */}
+      <Polyline
+        positions={drawnPoints}
+        pathOptions={{
+          color: '#ef4444',
+          weight: 16,
+          opacity: 0.25,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }}
+      />
+      {/* Mid glow */}
+      <Polyline
+        positions={drawnPoints}
+        pathOptions={{
+          color: '#f87171',
+          weight: 10,
+          opacity: 0.5,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }}
+      />
+      {/* Main path - đỏ tươi */}
+      <Polyline
+        positions={drawnPoints}
+        pathOptions={{
+          color: '#dc2626',
+          weight: 6,
+          opacity: 1,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }}
+      />
+      {/* Inner highlight - sáng trắng */}
+      <Polyline
+        positions={drawnPoints}
+        pathOptions={{
+          color: '#fef2f2',
+          weight: 2,
+          opacity: 0.8,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }}
+      />
+
+      {/* Car marker at the tip of the drawn path */}
+      {drawnPoints[drawnPoints.length - 1] && (
+        <Marker position={drawnPoints[drawnPoints.length - 1]} icon={carIcon} />
+      )}
+    </>
+  )
 }

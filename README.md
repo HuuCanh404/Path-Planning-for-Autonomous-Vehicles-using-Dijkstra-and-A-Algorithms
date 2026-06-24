@@ -1,97 +1,61 @@
-# PathCraft - Path Planning Dashboard for Autonomous Vehicles
+# Path Planning for Autonomous Vehicles Simulator (Dijkstra vs A* Algorithms)
 
-PathCraft là một giao diện tương tác (dashboard) trực quan hóa và so sánh hiệu năng giữa hai thuật toán tìm đường đi phổ biến: **Dijkstra** và **A\* (A-Star)** áp dụng cho xe tự hành. Dự án hỗ trợ cả việc mô phỏng thuật toán trên lưới ô vuông giả định (Grid Search) và tìm kiếm tuyến đường di chuyển thực tế theo các đường phố Hà Nội.
+Đồ án môn học: **Phân tích Thiết kế và Đánh giá Giải thuật**  
+Đề tài: **Lập kế hoạch đường đi cho xe tự hành sử dụng thuật toán Dijkstra và A* (Path Planning for Autonomous Vehicles using Dijkstra and A* Algorithms)**
 
----
-
-## 🛠️ Công Nghệ Sử Dụng
-
-- **Core**: React 18, Vite
-- **Styling**: TailwindCSS, PostCSS
-- **Bản đồ**: Leaflet, React-Leaflet
-- **Biểu đồ**: Recharts
-- **Icons**: Lucide React
-- **Routing API**: Open Source Routing Machine (OSRM)
+Dự án này là một công cụ mô phỏng trực quan giúp sinh viên và người nghiên cứu quan sát, phân tích và so sánh hiệu năng giữa hai giải thuật tìm kiếm đường đi phổ biến: **Dijkstra** và **A\*** trên cả mô hình mạng lưới điểm (Node-Link Graph) và bản đồ giao thông thực tế.
 
 ---
 
-## ✨ Tính Năng Nổi Bật
+## 🌟 Tính Năng Chính
 
-### 1. Bản Đồ Tương Tác
-- Sử dụng bản đồ tương tác Leaflet tập trung tại khu vực trung tâm Hà Nội.
-- Cho phép người dùng trực tiếp chọn điểm xuất phát (**Start**) và điểm đích (**Goal**) bằng cách click trực tiếp trên bản đồ.
+### 1. Bố cục Giao diện Trực quan (3 Phần)
+- **Khu vực điều khiển (Left Control Panel):** Thiết lập chướng ngại vật, điểm Start/Goal, chọn thuật toán, hướng di chuyển (4 hướng/8 hướng) và thực thi/so sánh.
+- **Khu vực mô phỏng (Simulation Map Area):** Bản đồ tương tác Leaflet hỗ trợ hiển thị lưới liên kết điểm học thuật (Graph View) hoặc bản đồ thực tế 3D (3D View).
+- **Khu vực thống kê (Right Result Panel):** Hiển thị thời gian chạy, số node đã duyệt, chiều dài và chi phí đường đi kèm biểu đồ so sánh hiệu năng trực quan.
 
-### 2. Hai Chế Độ Hiển Thị (Dual View Modes)
-- **3D View (Real Road Routing)**: Tìm kiếm và hiển thị tuyến đường đi thực tế theo mạng lưới giao thông đường bộ Hà Nội sử dụng API OSRM. Vẽ hoạt ảnh di chuyển mô phỏng xe tự hành chạy dọc tuyến đường.
-- **Grid View (Grid Search)**:
-  - Chia bản đồ thành một lưới ô vuông kích thước 20x30.
-  - Tự động bắt điểm (Snap) vị trí click của người dùng vào tâm ô lưới gần nhất.
-  - Trực quan hóa chướng ngại vật (Obstacles - màu đỏ), vùng tìm kiếm (Visited Nodes - màu xanh lam nhạt) và đường đi tối ưu theo ô lưới của thuật toán được chọn.
+### 2. Tương tác Vẽ vật cản động (Dynamic Obstacles)
+- Người dùng có thể bật chế độ **Select Obstacles** ở cột trái và click trực tiếp lên các điểm nút (node) của Graph để bật/tắt vật cản (màu đỏ).
+- Các thuật toán sẽ tự động tính toán tránh các vật cản này khi nhấn chạy.
 
-### 3. So Sánh Hiệu Năng Trực Quan
-- Bảng so sánh chi tiết và biểu đồ cột (Recharts) cập nhật thời gian thực về các chỉ số:
-  - **Thời gian xử lý (Time in ms)**
-  - **Số lượng điểm đã duyệt (Visited Nodes)**
-  - **Chi phí đường đi (Path Cost)**
+### 3. Hiệu ứng duyệt node tuần tự (Search Animation)
+- Khi thuật toán chạy, các node được duyệt sẽ lan tỏa dần theo thời gian thực (Dijkstra lan tỏa đều hình tròn, A* hướng tâm về phía đích), mô phỏng chính xác cách thức tìm kiếm của từng giải thuật.
+
+### 4. Mô phỏng Xe di chuyển (Moving Car Animation 🚗)
+- Xe ô tô nhỏ màu đỏ (`🚗` trong 3D View) hoặc màu xanh cyan (`🚗` trong Graph View) sẽ xuất hiện tại điểm Start và tự động di chuyển chạy dọc theo các nút đường đi tới điểm đích, vẽ đường đi sáng màu phía sau.
 
 ---
 
-## 🚀 Hướng Dẫn Chạy Dự Án
+## 📊 So Sánh Thuật Toán
 
-### Yêu Cầu Hệ Thống
-- Máy tính đã cài đặt **Node.js** (Khuyến nghị phiên bản LTS mới nhất).
-
-### Các Bước Thực Hiện
-
-1. **Tải mã nguồn về máy** (hoặc di chuyển vào thư mục dự án):
-   ```bash
-   cd E:\GTVTK2\path-planning-dashboard
-   ```
-
-2. **Cài đặt các thư viện phụ thuộc (Dependencies)**:
-   ```bash
-   npm install
-   ```
-
-3. **Chạy máy chủ phát triển (Development Server)**:
-   ```bash
-   npm run dev
-   ```
-   Sau khi khởi động thành công, Vite sẽ cung cấp một liên kết cục bộ, thường là:
-   - **Local**: [http://localhost:5173/](http://localhost:5173/) (hoặc cổng mạng khác như `http://localhost:5175/`).
-   - Mở trình duyệt web của bạn và truy cập vào liên kết trên để trải nghiệm ứng dụng.
-
-4. **Đóng gói sản phẩm (Build Production)**:
-   ```bash
-   npm run build
-   ```
-   Mã nguồn đã tối ưu hóa sẽ được lưu trữ trong thư mục `dist/`.
+| Đặc tính | Thuật toán Dijkstra | Thuật toán A* Search |
+| :--- | :--- | :--- |
+| **Heuristic** | Không sử dụng ($h(n) = 0$). | Sử dụng hàm khoảng cách Manhattan/Euclidean để định hướng giải thuật về phía đích. |
+| **Không gian tìm kiếm** | Lan tỏa đều ra mọi hướng xung quanh (dạng sóng tròn). | Hướng thẳng về phía điểm Goal, giảm thiểu tối đa số node cần duyệt. |
+| **Hiệu năng (Thời gian)** | Chậm hơn, duyệt nhiều node không cần thiết. | Nhanh hơn vượt trội nhờ có thông tin định hướng. |
+| **Độ tối ưu đường đi** | Cam kết tìm ra đường đi ngắn nhất tuyệt đối. | Cam kết tìm ra đường đi tối ưu nhất nếu hàm Heuristic là chấp nhận được (admissible). |
 
 ---
 
-## 📂 Cấu Trúc Dự Án
+## 🛠️ Hướng dẫn cài đặt và khởi chạy
 
-```text
-├── src/
-│   ├── components/
-│   │   ├── Header.jsx         # Thanh công cụ trên đầu (chọn thuật toán)
-│   │   ├── LeftSidebar.jsx     # Bảng điều khiển chọn điểm, cấu hình thuật toán
-│   │   ├── RightSidebar.jsx    # Bảng số liệu so sánh & biểu đồ cột Recharts
-│   │   ├── BottomBar.jsx       # Chọn chế độ hiển thị (3D / Grid) và chú thích
-│   │   ├── MapView.jsx         # Bản đồ Leaflet chứa các Layer vẽ Grid/Tuyến đường
-│   │   └── RealRoute.jsx       # Component xử lý gọi API OSRM và vẽ tuyến đường thật
-│   ├── utils/
-│   │   ├── algorithms.js       # Implement thuật toán A* và Dijkstra trên Grid
-│   │   ├── gridHelper.js       # Helper chuyển đổi tọa độ lat/lng và ô lưới 20x30
-│   │   └── routing.js          # Hàm fetch và haversine cho OSRM
-│   ├── App.jsx                 # Component chính quản lý State toàn cục
-│   ├── main.jsx                # File entry khởi tạo ứng dụng React
-│   └── index.css               # Chứa custom CSS và import Leaflet CSS
-├── package.json
-└── vite.config.js
+Dự án được xây dựng bằng **ReactJS**, **Vite** và **TailwindCSS**.
+
+### 1. Cài đặt các gói phụ thuộc (Dependencies)
+Mở terminal tại thư mục `path-planning-dashboard` và chạy lệnh:
+```bash
+npm install
 ```
 
----
+### 2. Chạy Server phát triển (Development Server)
+Khởi động ứng dụng cục bộ bằng lệnh:
+```bash
+npm run dev
+```
+Sau đó truy cập đường dẫn hiển thị trên terminal (thông thường là `http://localhost:5175`).
 
-## 👨‍💻 Tác Giả
-Dự án được xây dựng và phát triển bởi **[HuuCanh404](https://github.com/HuuCanh404)**.
+### 3. Biên dịch bản Production
+```bash
+npm run build
+```
+Mã nguồn đã biên dịch tối ưu sẽ nằm trong thư mục `dist`.
