@@ -425,7 +425,7 @@ export default function ParkingLotView({ onClose }) {
                       textAnchor="middle"
                       className="text-[9px] fill-slate-400 font-mono pointer-events-none opacity-80 group-hover:opacity-100 group-hover:fill-emerald-400 transition"
                     >
-                      {slot.id.toUpperCase()} ({slot.type})
+                      {slot.id.toUpperCase()}
                     </text>
 
                     {/* Occupied label indicator */}

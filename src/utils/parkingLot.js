@@ -237,8 +237,8 @@ export function buildParkingPath(strategy, carPos, slot) {
 
     // Start angle: 0 (facing right) or 180 (facing left)
     const startAngle = 0
-    // End angle: -90 degrees (facing up into slot)
-    const endAngle = -Math.PI / 2
+    // End angle: matching the slot's angle
+    const endAngle = (slot.angle * Math.PI) / 180
 
     for (let i = 0; i <= steps; i++) {
       const t = i / steps
@@ -259,10 +259,10 @@ export function buildParkingPath(strategy, carPos, slot) {
       const x = (1 - t) ** 3 * P0.x + 3 * (1 - t) ** 2 * t * P1.x + 3 * (1 - t) * t ** 2 * P2.x + t ** 3 * P3.x
       const y = (1 - t) ** 3 * P0.y + 3 * (1 - t) ** 2 * t * P1.y + 3 * (1 - t) * t ** 2 * P2.y + t ** 3 * P3.y
       
-      // Interpolate angle from 0 -> maximum twist -> 0
+      // Interpolate angle from 0 -> maximum twist -> slot.angle
       const startAngle = 0
       const midAngle = Math.PI / 6 // 30 deg twist
-      const endAngle = 0
+      const endAngle = (slot.angle * Math.PI) / 180
 
       let angle = 0
       if (t < 0.5) {
@@ -291,7 +291,7 @@ export function buildParkingPath(strategy, carPos, slot) {
     const P1 = { x: P0.x - 2.5, y: P0.y }
     const P2 = { x: slot.cx, y: P0.y + 3.0 }
     const startAngle = 0
-    const endAngle = -Math.PI / 2
+    const endAngle = (slot.angle * Math.PI) / 180
 
     for (let i = 0; i <= steps; i++) {
       const t = i / steps
