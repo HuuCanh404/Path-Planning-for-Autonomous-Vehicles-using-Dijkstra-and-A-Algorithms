@@ -75,7 +75,7 @@ function MapView({
   selectMode, setSelectMode,
   hoverPos, setHoverPos, onMapClick,
   carRunning, routeError, graph, bounds,
-  dynamicObstacles
+  dynamicObstacles, goalIsParkingLot, onArriveAtParkingLot
 }) {
   const [animationIndex, setAnimationIndex] = useState(0)
 
@@ -134,16 +134,22 @@ function MapView({
     
     const interval = setInterval(() => {
       setCarPathIndex(prev => {
-        if (prev >= totalPoints - 1) {
+        const next = prev + 1
+        if (next >= totalPoints - 1) {
           clearInterval(interval)
+          if (goalIsParkingLot && onArriveAtParkingLot) {
+            setTimeout(() => {
+              onArriveAtParkingLot()
+            }, 500)
+          }
           return totalPoints - 1
         }
-        return prev + 1
+        return next
       })
     }, 200)
 
     return () => clearInterval(interval)
-  }, [result, isAnimationDone, carRunning, view])
+  }, [result, isAnimationDone, carRunning, view, goalIsParkingLot, onArriveAtParkingLot])
 
   const pathPoints = (view === 'grid' && graph && result?.path)
     ? result.path.map(id => {
@@ -210,6 +216,7 @@ function MapView({
             start={startPoint}
             goal={goalPoint}
             isAnimating={carRunning}
+            onComplete={() => goalIsParkingLot && onArriveAtParkingLot()}
             onError={(err) => console.error('Route error:', err)}
           />
         )}

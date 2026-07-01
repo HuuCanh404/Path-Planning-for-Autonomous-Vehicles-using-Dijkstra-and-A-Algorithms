@@ -4,7 +4,8 @@ import LeftSidebar from './components/LeftSidebar'
 import MapView from './components/MapView'
 import RightSidebar from './components/RightSidebar'
 import BottomBar from './components/BottomBar'
-import { runAStar, runDijkstra, DEFAULT_GRID, gridToLatLng, latLngToGrid, generateGraph, getClosestNode, runGraphAStar, runGraphDijkstra } from './utils/algorithms'
+import ParkingLotView from './components/ParkingLotView'
+import { runAStar, runDijkstra, runBFS, runDStarLite, DEFAULT_GRID, gridToLatLng, latLngToGrid, generateGraph, getClosestNode, runGraphAStar, runGraphDijkstra } from './utils/algorithms'
 
 function App() {
   const [algorithm, setAlgorithm] = useState('astar')
@@ -14,11 +15,14 @@ function App() {
   const [carRunning, setCarRunning] = useState(false)
   const [view, setView] = useState('3d')
   const [dynamicObstacles, setDynamicObstacles] = useState(new Set())
+  const [goalIsParkingLot, setGoalIsParkingLot] = useState(false)
+  const [parkingModeActive, setParkingModeActive] = useState(false)
 
   // Clear pathfinding results when view or selected algorithm changes
   useEffect(() => {
     setResult(null)
     setCompareMode(false)
+    setParkingModeActive(false)
   }, [view, algorithm])
 
   const [layers, setLayers] = useState({
@@ -72,6 +76,7 @@ function App() {
     setCarRunning(false)
     setResult(null)
     setCompareMode(isCompare)
+    setParkingModeActive(false)
     setRouteError(null)
     setTimeout(() => {
       if (view === 'grid') {
@@ -82,11 +87,16 @@ function App() {
         const r = fn(startNode.id, goalNode.id, graph, dynamicObstacles)
         setResult(r)
       } else {
-        // 3D View (Real Road Routing) - we still keep the old comparison run on DEFAULT_GRID
+        // 3D View (Real Road Routing) - chạy A*, D* Lite, Dijkstra hoặc BFS
         const grid = DEFAULT_GRID
         const startGrid = latLngToGrid(startPos.lat, startPos.lng, bounds)
         const goalGrid = latLngToGrid(goalPos.lat, goalPos.lng, bounds)
-        const fn = algorithm === 'astar' ? runAStar : runDijkstra
+        // Chọn thuật toán theo variant được chọn
+        let fn
+        if (variant === 'Dijkstra') fn = runDijkstra
+        else if (variant === 'BFS (Breadth-First)') fn = runBFS
+        else if (variant === 'D* Lite (Dynamic)') fn = runDStarLite
+        else fn = runAStar
         const r = fn(startGrid, goalGrid, grid.obstacles, grid, movement)
         setResult(r)
       }
@@ -122,6 +132,7 @@ function App() {
       setSelectMode('goal')
       setResult(null)
       setCompareMode(false)
+      setParkingModeActive(false)
     } else if (selectMode === 'goal') {
       // Cột đích: Hút vào node gần nhất của đồ thị vừa được cập nhật theo Start
       const closestNode = getClosestNode(lat, lng, graph.nodes)
@@ -134,6 +145,7 @@ function App() {
       setSelectMode(null)
       setResult(null)
       setCompareMode(false)
+      setParkingModeActive(false)
     }
   }
 
@@ -142,6 +154,7 @@ function App() {
     setGoalPos(null)
     setResult(null)
     setCompareMode(false)
+    setParkingModeActive(false)
     setDynamicObstacles(new Set(graph.obstacles))
     setSelectMode('start')
   }
@@ -163,6 +176,8 @@ function App() {
           readyToRun={readyToRun}
           onReset={resetSelection}
           dynamicObstacles={dynamicObstacles}
+          goalIsParkingLot={goalIsParkingLot}
+          setGoalIsParkingLot={setGoalIsParkingLot}
         />
         <MapView
           result={result} algorithm={algorithm} layers={layers} view={view}
@@ -175,10 +190,15 @@ function App() {
           graph={graph}
           bounds={bounds}
           dynamicObstacles={dynamicObstacles}
+          goalIsParkingLot={goalIsParkingLot}
+          onArriveAtParkingLot={() => setParkingModeActive(true)}
         />
         <RightSidebar result={result} algorithm={algorithm} compareMode={compareMode} />
       </div>
       <BottomBar view={view} setView={setView} />
+      {parkingModeActive && (
+        <ParkingLotView onClose={() => setParkingModeActive(false)} />
+      )}
     </div>
   )
 }

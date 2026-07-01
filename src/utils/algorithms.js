@@ -273,6 +273,267 @@ function runDijkstraRaw(start, goal, grid, movement) {
  return { time: 0, visited: 0, cost: 0 }
 }
 
+// === BFS (Breadth-First Search) ===
+// Tìm đường ngắn nhất theo số bước (không tối ưu trọng số)
+// Mở rộng theo từng lớp (level-order)
+export function runBFS(start, goal, obstacles, grid, movement = 4) {
+ const t0 = performance.now()
+ const queue = [start]
+ const cameFrom = new Map()
+ const visited = []
+ const closed = new Set()
+ closed.add(`${start[0]},${start[1]}`)
+ visited.push(start)
+
+ while (queue.length > 0) {
+ const current = queue.shift()
+ const key = `${current[0]},${current[1]}`
+
+ if (current[0] === goal[0] && current[1] === goal[1]) {
+ const path = reconstructPath(cameFrom, current)
+ const t1 = performance.now()
+ return {
+ path,
+ visited,
+ distance: path.length * 0.1,
+ cost: path.length,
+ selected: closed.size,
+ time: t1 - t0,
+ compare: makeCompareData(start, goal, grid, movement)
+ }
+ }
+
+ for (const { node: neighbor, cost } of getNeighbors(current, grid, movement)) {
+ const nKey = `${neighbor[0]},${neighbor[1]}`
+ if (closed.has(nKey)) continue
+ closed.add(nKey)
+ visited.push(neighbor)
+ cameFrom.set(nKey, current)
+ queue.push(neighbor)
+ }
+ }
+
+ const t1 = performance.now()
+ return {
+ path: [],
+ visited,
+ distance: 0,
+ cost: 0,
+ selected: closed.size,
+ time: t1 - t0,
+ compare: makeCompareData(start, goal, grid, movement)
+ }
+}
+
+// === D* Lite (Dynamic A*) ===
+// Tác giả: Sven Koenig & Maxim Likhachev (2002)
+// "Fast Replanning for Navigation in Unknown Terrain"
+// Thuật toán A* cải tiến cho môi trường THAY ĐỔI ĐỘNG:
+// - Khi phát hiện chướng ngại vật mới → tính lại đường đi từ điểm hiện tại
+// - Không cần tính lại từ đầu (như A* thường)
+// - Chi phí cập nhật: O(1) amortized mỗi lần thay đổi
+// - Tìm kiếm NGƯỢC từ Goal về Start (khác A*)
+class DStarLitePriorityQueue {
+ constructor() { this.heap = [] }
+ push(item) {
+ this.heap.push(item)
+ this._bubbleUp(this.heap.length - 1)
+ }
+ pop() {
+ if (this.heap.length === 0) return null
+ const top = this.heap[0]
+ const last = this.heap.pop()
+ if (this.heap.length > 0) {
+ this.heap[0] = last
+ this._sinkDown(0)
+ }
+ return top
+ }
+ top() { return this.heap[0] }
+ size() { return this.heap.length }
+ remove(predicate) {
+ this.heap = this.heap.filter(item => !predicate(item))
+ // Rebuild heap (đơn giản: heapify)
+ for (let i = Math.floor(this.heap.length / 2) - 1; i >= 0; i--) {
+ this._sinkDown(i)
+ }
+ }
+ _bubbleUp(n) {
+ while (n > 0) {
+ const parent = Math.floor((n - 1) / 2)
+ if (this.heap[n].k[0] < this.heap[parent].k[0] ||
+ (this.heap[n].k[0] === this.heap[parent].k[0] && this.heap[n].k[1] < this.heap[parent].k[1])) {
+ [this.heap[n], this.heap[parent]] = [this.heap[parent], this.heap[n]]
+ n = parent
+ } else break
+ }
+ }
+ _sinkDown(n) {
+ const length = this.heap.length
+ while (true) {
+ const left = 2 * n + 1, right = 2 * n + 2
+ let smallest = n
+ if (left < length && (this.heap[left].k[0] < this.heap[smallest].k[0] ||
+ (this.heap[left].k[0] === this.heap[smallest].k[0] && this.heap[left].k[1] < this.heap[smallest].k[1]))) {
+ smallest = left
+ }
+ if (right < length && (this.heap[right].k[0] < this.heap[smallest].k[0] ||
+ (this.heap[right].k[0] === this.heap[smallest].k[0] && this.heap[right].k[1] < this.heap[smallest].k[1]))) {
+ smallest = right
+ }
+ if (smallest !== n) {
+ [this.heap[n], this.heap[smallest]] = [this.heap[smallest], this.heap[n]]
+ n = smallest
+ } else break
+ }
+ }
+}
+
+function heuristicD(a, b) {
+ return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])
+}
+
+export function runDStarLite(start, goal, obstacles, grid, movement = 4) {
+ const t0 = performance.now()
+ const obSet = new Set(obstacles.map(([r, c]) => `${r},${c}`))
+ const startK = `${start[0]},${start[1]}`
+ const goalK = `${goal[0]},${goal[1]}`
+
+ // D* Lite dùng goal làm điểm bắt đầu, tìm ngược về start
+ const km = 0 // hệ số heuristic
+ const g = new Map() // cost từ u đến goal
+ const rhs = new Map() // one-step lookahead
+ const U = new DStarLitePriorityQueue()
+
+ rhs.set(goalK, 0)
+ U.push({ id: goalK, k: [heuristicD(start, goal), 0] })
+
+ function calculateKey(u) {
+ const gval = g.get(u) ?? Infinity
+ const rhsval = rhs.get(u) ?? Infinity
+ const k1 = Math.min(gval, rhsval) + heuristicD(
+ u.split(',').map(Number), start) + km
+ const k2 = Math.min(gval, rhsval)
+ return [k1, k2]
+ }
+
+ function updateVertex(u) {
+ const gval = g.get(u) ?? Infinity
+ const rhsval = rhs.get(u) ?? Infinity
+ if (gval !== rhsval) {
+ U.push({ id: u, k: calculateKey(u) })
+ } else if (U.heap.some(item => item.id === u)) {
+ U.remove(item => item.id === u)
+ }
+ }
+
+ function getNeighborsD(node) {
+ const [r, c] = node
+ const dirs4 = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+ const dirs8 = [...dirs4, [-1, -1], [-1, 1], [1, -1], [1, 1]]
+ const dirs = movement === 8 ? dirs8 : dirs4
+ const result = []
+ for (const [dr, dc] of dirs) {
+ const nr = r + dr, nc = c + dc
+ if (nr < 0 || nr >= grid.rows || nc < 0 || nc >= grid.cols) continue
+ if (obSet.has(`${nr},${nc}`)) continue
+ const cost = (dr !== 0 && dc !== 0) ? 1.414 : 1
+ result.push({ id: `${nr},${nc}`, cost })
+ }
+ return result
+ }
+
+ // Main loop - D* Lite (simplified cho grid pathfinding)
+ // Ý tưởng: mở rộng từ Goal về Start, dùng priority queue với key = [g+h, g]
+ // Khi tìm được start → dừng
+ let iterations = 0
+ const maxIter = 10000
+ let pathFound = false
+
+ while (U.size() > 0 && iterations < maxIter) {
+ iterations++
+ const u = U.pop()
+ if (!u) break
+ const [ur, uc] = u.id.split(',').map(Number)
+
+ // Nếu u là start và consistent → done
+ if (u.id === startK) {
+ const gval = g.get(u.id) ?? Infinity
+ const rhsval = rhs.get(u.id) ?? Infinity
+ if (gval === rhsval) {
+ pathFound = true
+ break
+ }
+ }
+
+ const gval = g.get(u.id) ?? Infinity
+ const rhsval = rhs.get(u.id) ?? Infinity
+
+ if (gval > rhsval) {
+ g.set(u.id, rhsval)
+ for (const succ of getNeighborsD([ur, uc])) {
+ if (succ.id === goalK) continue
+ const newRhs = (g.get(u.id) ?? Infinity) + succ.cost
+ if (newRhs < (rhs.get(succ.id) ?? Infinity)) {
+ rhs.set(succ.id, newRhs)
+ updateVertex(succ.id)
+ }
+ }
+ } else {
+ g.set(u.id, Infinity)
+ for (const succ of getNeighborsD([ur, uc])) {
+ if (rhs.get(succ.id) === (gval === Infinity ? Infinity : gval + succ.cost)) {
+ if (succ.id !== goalK) {
+ rhs.set(succ.id, Infinity)
+ updateVertex(succ.id)
+ }
+ }
+ }
+ updateVertex(u.id)
+ }
+ }
+
+ // Reconstruct path từ start đến goal (theo gradient g giảm dần)
+ const path = []
+ const visited = []
+ let cur = start
+ const visitedSet = new Set()
+ visitedSet.add(startK)
+ visited.push([...cur])
+ let safeIter = 0
+
+ while ((cur[0] !== goal[0] || cur[1] !== goal[1]) && safeIter++ < 500) {
+ const [r, c] = cur
+ let bestSucc = null
+ let bestG = Infinity
+ for (const succ of getNeighborsD([r, c])) {
+ if (visitedSet.has(succ.id)) continue
+ const sg = g.get(succ.id) ?? Infinity
+ if (sg < bestG) {
+ bestG = sg
+ bestSucc = succ
+ }
+ }
+ if (!bestSucc || bestG === Infinity) break
+ const [nr, nc] = bestSucc.id.split(',').map(Number)
+ cur = [nr, nc]
+ visitedSet.add(bestSucc.id)
+ path.push([...cur])
+ visited.push([...cur])
+ }
+
+ const t1 = performance.now()
+ return {
+ path,
+ visited,
+ distance: path.length * 0.1,
+ cost: path.length,
+ selected: g.size,
+ time: t1 - t0,
+ compare: makeCompareData(start, goal, grid, movement)
+ }
+}
+
 // === GRAPH SEARCH ALGORITHMS ===
 
 export function generateGraph(rows = 6, cols = 8, bounds) {
@@ -574,4 +835,31 @@ function runGraphDijkstraRaw(startNodeId, goalNodeId, graph, dynamicObstacles) {
     }
   }
   return { time: 0, visited: 0, cost: 0 }
+}
+
+// =============================================================
+// CÁC THUẬT TOÁN NÂNG CAO
+// =============================================================
+
+// Helper: lấy neighbors 4 hướng cho grid
+function getGridNeighbors(r, c, rows, cols, obstacles) {
+ const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+ const out = []
+ for (const [dr, dc] of dirs) {
+ const nr = r + dr, nc = c + dc
+ if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue
+ if (obstacles.some(([or, oc]) => or === nr && oc === nc)) continue
+ out.push([nr, nc])
+ }
+ return out
+}
+
+// Reconstruct grid path
+function reconstructGridPath(cameFrom, current) {
+ const path = [current]
+ while (cameFrom.has(`${current[0]},${current[1]}`)) {
+ current = cameFrom.get(`${current[0]},${current[1]}`)
+ path.unshift(current)
+ }
+ return path
 }

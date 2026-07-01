@@ -1,6 +1,6 @@
 import { MapPin, Flag, XCircle, Eye, Play, GitCompare, ChevronDown, Hand, RotateCcw, Check } from 'lucide-react'
 
-function Section({ title, children }) {
+export function Section({ title, children }) {
  return (
  <div>
  <h3 className="text-[11px] font-semibold text-slate-400 tracking-wider mb-3">{title}</h3>
@@ -9,7 +9,7 @@ function Section({ title, children }) {
  )
 }
 
-function ControlBtn({ icon, label, active, onClick, badge, completed }) {
+export function ControlBtn({ icon, label, active, onClick, badge, completed }) {
  return (
  <button
  onClick={onClick}
@@ -37,7 +37,7 @@ function ControlBtn({ icon, label, active, onClick, badge, completed }) {
  )
 }
 
-function Toggle({ label, value, onChange }) {
+export function Toggle({ label, value, onChange }) {
  return (
  <label className="flex items-center justify-between px-3 py-1.5 cursor-pointer">
  <span className="text-sm text-slate-300">{label}</span>
@@ -57,7 +57,7 @@ function Toggle({ label, value, onChange }) {
  )
 }
 
-function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVariant, onRun, onCompare, compareMode, running, selectMode, setSelectMode, start, goal, readyToRun, onReset, dynamicObstacles }) {
+function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVariant, onRun, onCompare, compareMode, running, selectMode, setSelectMode, start, goal, readyToRun, onReset, dynamicObstacles, goalIsParkingLot, setGoalIsParkingLot }) {
  const hasStart = !!start
  const hasGoal = !!goal
 
@@ -158,9 +158,9 @@ function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVar
  className="w-full appearance-none bg-paneldark border border-slate-700 rounded-md px-3 py-2 text-sm text-white pr-8 focus:outline-none focus:border-emerald-500"
  >
  <option>Standard A*</option>
- <option>Bidirectional A*</option>
- <option>Weighted A*</option>
- <option>Dynamic A*</option>
+ <option>D* Lite (Dynamic)</option>
+ <option>Dijkstra</option>
+ <option>BFS (Breadth-First)</option>
  </select>
  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
  </div>
@@ -182,6 +182,9 @@ function LeftSidebar({ layers, setLayers, movement, setMovement, variant, setVar
  <div className="flex justify-between text-[10px] text-slate-500 mt-1">
  <span>4</span>
  <span>8</span>
+ </div>
+ <div className="pt-2 border-t border-slate-700 mt-2">
+ <Toggle label="Goal là bãi đỗ xe" value={goalIsParkingLot} onChange={setGoalIsParkingLot} />
  </div>
  </div>
  </Section>
