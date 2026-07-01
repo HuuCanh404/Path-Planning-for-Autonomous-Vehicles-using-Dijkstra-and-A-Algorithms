@@ -48,8 +48,8 @@ export default function ParkingLotView({ onClose }) {
   // Get approach point
   const approachPoint = useMemo(() => {
     if (!bestSlot) return null
-    return getApproachPoint(bestSlot)
-  }, [bestSlot])
+    return getApproachPoint(bestSlot, strategyOverride)
+  }, [bestSlot, strategyOverride])
 
   // Run A* to approach point
   const { path: approachPath, visited: visitedNodes } = useMemo(() => {

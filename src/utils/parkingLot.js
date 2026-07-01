@@ -107,18 +107,15 @@ export function chooseBestSlot(slots, entryPoint, weights) {
 }
 
 // Gets the approach waypoint coordinates in the lane for a slot
-export function getApproachPoint(slot, laneY = 15) {
-  if (slot.type === 'perpendicular') {
-    // Directly in front of the slot center along laneY
-    return { x: slot.cx, y: laneY, angle: 0 }
-  } else if (slot.type === 'angled') {
-    // Offset slightly left to align with 45-degree angle
-    return { x: slot.cx - 4.0, y: laneY, angle: 0 }
-  } else if (slot.type === 'parallel') {
-    // In front of the slot (further right) to reverse backward
+export function getApproachPoint(slot, strategy = 'automatic', laneY = 15) {
+  const activeStrategy = strategy === 'automatic' ? slot.type : strategy
+
+  if (activeStrategy === 'perpendicular' || activeStrategy === 'angled' || activeStrategy === 'forwardOffset') {
+    return { x: slot.cx - 4.5, y: laneY, angle: 0 }
+  } else {
+    // parallel or reverseS
     return { x: slot.cx + 5.0, y: laneY, angle: 0 }
   }
-  return { x: slot.cx, y: laneY, angle: 0 }
 }
 
 // A* Grid Pathfinding to the approach point bypassing occupied obstacles
@@ -289,7 +286,7 @@ export function buildParkingPath(strategy, carPos, slot) {
   } else if (strategy === 'reverseS') {
     // Cubic Bezier: Reverse S-turn backing into perpendicular slot
     const P1 = { x: P0.x - 2.5, y: P0.y }
-    const P2 = { x: slot.cx, y: P0.y + 3.0 }
+    const P2 = { x: slot.cx, y: slot.cy < P0.y ? P0.y + 2.0 : P0.y - 2.0 }
     const startAngle = 0
     const endAngle = (slot.angle * Math.PI) / 180
 
